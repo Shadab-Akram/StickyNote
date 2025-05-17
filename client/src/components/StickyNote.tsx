@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { ClientNote } from "@shared/schema";
 import { FormatToolbar } from "./FormatToolbar";
 import { ColorPicker } from "./ColorPicker";
-import interact from "interact.js";
 import { cn } from "@/lib/utils";
 
 interface StickyNoteProps {
@@ -34,103 +33,126 @@ export function StickyNote({
     year: 'numeric'
   });
   
-  useEffect(() => {
+  // Handle drag functionality
+  const handleDragStart = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('.note-header')) return;
+    
+    e.preventDefault();
+    onBringToFront(note.id);
+    
     const noteElement = noteRef.current;
     if (!noteElement) return;
     
-    // Make note draggable
-    const draggable = interact(noteElement).draggable({
-      modifiers: [
-        interact.modifiers.restrictRect({
-          restriction: 'parent',
-          endOnly: true
-        })
-      ],
-      listeners: {
-        start() {
-          onBringToFront(note.id);
-        },
-        move(event) {
-          const x = (parseFloat(noteElement.getAttribute('data-x') || '0') || 0) + event.dx;
-          const y = (parseFloat(noteElement.getAttribute('data-y') || '0') || 0) + event.dy;
-          
-          // Apply grid snapping if enabled
-          const snappedPosition = isGridVisible ? 
-            { x: Math.round(x / gridSize) * gridSize, y: Math.round(y / gridSize) * gridSize } : 
-            { x, y };
-          
-          // Update element position
-          noteElement.style.transform = `translate(${snappedPosition.x}px, ${snappedPosition.y}px)`;
-          
-          // Update data attributes
-          noteElement.setAttribute('data-x', String(snappedPosition.x));
-          noteElement.setAttribute('data-y', String(snappedPosition.y));
-        },
-        end(event) {
-          const x = parseFloat(noteElement.getAttribute('data-x') || '0');
-          const y = parseFloat(noteElement.getAttribute('data-y') || '0');
-          
-          onUpdate(note.id, { x, y });
-        }
+    const startX = e.clientX;
+    const startY = e.clientY;
+    
+    // Get the current position
+    const transform = noteElement.style.transform || `translate(${note.x}px, ${note.y}px)`;
+    const match = transform.match(/translate\((\d+)px, (\d+)px\)/);
+    if (!match) return;
+    
+    const startPosX = parseInt(match[1]);
+    const startPosY = parseInt(match[2]);
+    
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const dx = moveEvent.clientX - startX;
+      const dy = moveEvent.clientY - startY;
+      
+      let newX = startPosX + dx;
+      let newY = startPosY + dy;
+      
+      // Apply grid snapping if enabled
+      if (isGridVisible) {
+        newX = Math.round(newX / gridSize) * gridSize;
+        newY = Math.round(newY / gridSize) * gridSize;
       }
-    });
-    
-    // Make note resizable
-    const resizable = interact(noteElement).resizable({
-      edges: { right: true, bottom: true, left: false, top: false },
-      restrictSize: {
-        min: { width: 150, height: 120 }
-      },
-      listeners: {
-        start() {
-          onBringToFront(note.id);
-        },
-        move(event) {
-          let width = event.rect.width;
-          let height = event.rect.height;
-          
-          // Apply grid snapping if enabled
-          if (isGridVisible) {
-            width = Math.round(width / gridSize) * gridSize;
-            height = Math.round(height / gridSize) * gridSize;
-          }
-          
-          // Update element size
-          Object.assign(noteElement.style, {
-            width: `${width}px`,
-            height: `${height}px`
-          });
-        },
-        end(event) {
-          const width = parseFloat(noteElement.style.width);
-          const height = parseFloat(noteElement.style.height);
-          
-          onUpdate(note.id, { width, height });
-        }
-      }
-    });
-    
-    // Set initial position
-    noteElement.style.transform = `translate(${note.x}px, ${note.y}px)`;
-    noteElement.setAttribute('data-x', String(note.x));
-    noteElement.setAttribute('data-y', String(note.y));
-    
-    return () => {
-      draggable.unset();
-      resizable.unset();
+      
+      // Update element position
+      noteElement.style.transform = `translate(${newX}px, ${newY}px)`;
     };
-  }, [note.id, note.x, note.y, onBringToFront, onUpdate, isGridVisible, gridSize]);
+    
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      
+      const transform = noteElement.style.transform;
+      const match = transform.match(/translate\((\d+)px, (\d+)px\)/);
+      
+      if (match) {
+        const x = parseInt(match[1]);
+        const y = parseInt(match[2]);
+        onUpdate(note.id, { x, y });
+      }
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
   
+  // Handle resize functionality
+  const handleResizeStart = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('.resize-handle')) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    onBringToFront(note.id);
+    
+    const noteElement = noteRef.current;
+    if (!noteElement) return;
+    
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = noteElement.offsetWidth;
+    const startHeight = noteElement.offsetHeight;
+    
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const dx = moveEvent.clientX - startX;
+      const dy = moveEvent.clientY - startY;
+      
+      let width = Math.max(150, startWidth + dx);
+      let height = Math.max(120, startHeight + dy);
+      
+      // Apply grid snapping if enabled
+      if (isGridVisible) {
+        width = Math.round(width / gridSize) * gridSize;
+        height = Math.round(height / gridSize) * gridSize;
+      }
+      
+      // Update element size
+      noteElement.style.width = `${width}px`;
+      noteElement.style.height = `${height}px`;
+    };
+    
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      
+      onUpdate(note.id, { 
+        width: noteElement.offsetWidth,
+        height: noteElement.offsetHeight
+      });
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+  
+  // Update note content when user edits the text
   const handleContentChange = (e: React.FormEvent<HTMLDivElement>) => {
     onUpdate(note.id, { 
       content: e.currentTarget.innerHTML 
     });
   };
   
+  // Bring note to front on click
   const handleClick = () => {
     onBringToFront(note.id);
   };
   
+  // Open color picker when clicking the color button
   const handleColorPickerOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
     
@@ -143,11 +165,13 @@ export function StickyNote({
     setIsColorPickerOpen(true);
   };
   
+  // Update note color when selecting from color picker
   const handleColorChange = (color: string) => {
     onUpdate(note.id, { color });
     setIsColorPickerOpen(false);
   };
   
+  // Show format toolbar when text is selected
   const handleContentSelection = () => {
     const selection = window.getSelection();
     if (selection && selection.toString().length > 0) {
@@ -165,6 +189,7 @@ export function StickyNote({
     }
   };
   
+  // Apply format to selected text
   const handleFormatAction = (format: string) => {
     document.execCommand(format, false);
   };
@@ -181,11 +206,15 @@ export function StickyNote({
         style={{
           width: `${note.width}px`,
           height: `${note.height}px`,
-          zIndex: note.zIndex
+          zIndex: note.zIndex,
+          transform: `translate(${note.x}px, ${note.y}px)`
         }}
         data-id={note.id}
       >
-        <div className="note-header cursor-move flex justify-between p-2">
+        <div 
+          className="note-header cursor-move flex justify-between p-2"
+          onMouseDown={handleDragStart}
+        >
           <div className="note-drag-handle w-full h-5"></div>
           <div 
             className={cn(
@@ -220,7 +249,10 @@ export function StickyNote({
           </button>
         </div>
         
-        <div className="resize-handle absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize">
+        <div 
+          className="resize-handle absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize"
+          onMouseDown={handleResizeStart}
+        >
           <i className="ri-corner-right-down-line text-gray-400 text-xs"></i>
         </div>
       </div>
