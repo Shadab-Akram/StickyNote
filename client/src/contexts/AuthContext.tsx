@@ -1,14 +1,9 @@
-import { useState, useEffect, createContext, useContext } from 'react';
-import { useToast } from './use-toast';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 interface User {
   id: number;
   username: string;
-}
-
-interface AuthState {
-  authenticated: boolean;
-  user?: User;
 }
 
 interface AuthContextType {
@@ -21,11 +16,13 @@ interface AuthContextType {
   checkAuthStatus: () => Promise<void>;
 }
 
-// Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Auth provider component
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -171,24 +168,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const contextValue: AuthContextType = {
-    user,
-    isAuthenticated,
-    isLoading,
-    login,
-    register,
-    logout,
-    checkAuthStatus
-  };
-
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        isLoading,
+        login,
+        register,
+        logout,
+        checkAuthStatus
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
-// Custom hook to use the auth context
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
