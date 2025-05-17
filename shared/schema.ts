@@ -12,6 +12,7 @@ export const users = pgTable("users", {
 export const notes = pgTable("notes", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
+  title: text("title").default("Note"),
   content: text("content").default(""),
   x: integer("x").notNull(),
   y: integer("y").notNull(),
@@ -31,6 +32,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 // Note insert schema
 export const insertNoteSchema = createInsertSchema(notes).pick({
   userId: true,
+  title: true,
   content: true,
   x: true,
   y: true,
@@ -49,6 +51,7 @@ export type Note = typeof notes.$inferSelect;
 // Client-side note type (with string ID for client-side usage)
 export const noteSchema = z.object({
   id: z.string(),
+  title: z.string().default("Note"),
   content: z.string().default(""),
   x: z.number(),
   y: z.number(),
@@ -64,6 +67,7 @@ export const noteSchema = z.object({
 export function dbNoteToClientNote(note: Note): ClientNote {
   return {
     id: note.id.toString(),
+    title: note.title || "Note",
     content: note.content || "",
     x: note.x,
     y: note.y,
@@ -79,6 +83,7 @@ export function dbNoteToClientNote(note: Note): ClientNote {
 export function clientNoteToDbNote(note: ClientNote, userId?: number): InsertNote {
   return {
     userId: userId || null,
+    title: note.title,
     content: note.content,
     x: note.x,
     y: note.y, 

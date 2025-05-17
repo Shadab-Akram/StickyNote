@@ -24,10 +24,13 @@ export function StickyNote({
 }: StickyNoteProps) {
   const noteRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLDivElement>(null);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [colorPickerPosition, setColorPickerPosition] = useState({ x: 0, y: 0 });
   const [isFormatToolbarOpen, setIsFormatToolbarOpen] = useState(false);
   const [formatToolbarPosition, setFormatToolbarPosition] = useState({ x: 0, y: 0 });
+  const [title, setTitle] = useState(note.title || "Note");
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
   
   // Format date
   const formattedDate = new Date(note.createdAt).toLocaleDateString('en-US', {
@@ -45,32 +48,40 @@ export function StickyNote({
   
   // Handle drag functionality
   const handleDragStart = (e: React.MouseEvent) => {
+    // Make sure we're only dragging from the header
     const target = e.target as HTMLElement;
     if (!target.closest('.note-header')) return;
     
+    // Prevent default browser behavior and bring note to front
     e.preventDefault();
     onBringToFront(note.id);
     
     const noteElement = noteRef.current;
     if (!noteElement) return;
     
+    // Get starting mouse position
     const startX = e.clientX;
     const startY = e.clientY;
     
-    // Get the current position
-    const transform = noteElement.style.transform || `translate(${note.x}px, ${note.y}px)`;
-    const match = transform.match(/translate\((\d+)px, (\d+)px\)/);
-    if (!match) return;
+    // Get initial note position
+    let startPosX = note.x; 
+    let startPosY = note.y;
     
-    const startPosX = parseInt(match[1]);
-    const startPosY = parseInt(match[2]);
-    
+    // Track mouse movement
     const handleMouseMove = (moveEvent: MouseEvent) => {
+      moveEvent.preventDefault();
+      
+      // Calculate distance moved
       const dx = moveEvent.clientX - startX;
       const dy = moveEvent.clientY - startY;
       
+      // Calculate new position
       let newX = startPosX + dx;
       let newY = startPosY + dy;
+      
+      // Ensure position is not negative
+      newX = Math.max(0, newX);
+      newY = Math.max(0, newY);
       
       // Apply grid snapping if enabled
       if (isGridVisible) {
@@ -78,16 +89,18 @@ export function StickyNote({
         newY = Math.round(newY / gridSize) * gridSize;
       }
       
-      // Update element position
+      // Update element position visually
       noteElement.style.transform = `translate(${newX}px, ${newY}px)`;
     };
     
-    const handleMouseUp = () => {
+    // Handle mouse up - save the new position
+    const handleMouseUp = (upEvent: MouseEvent) => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       
-      const transform = noteElement.style.transform;
-      const match = transform.match(/translate\((\d+)px, (\d+)px\)/);
+      // Get final position from transform
+      const finalTransform = noteElement.style.transform;
+      const match = finalTransform.match(/translate\((-?\d+(?:\.\d+)?)px,\s*(-?\d+(?:\.\d+)?)px\)/);
       
       if (match) {
         const x = parseInt(match[1]);
@@ -96,6 +109,7 @@ export function StickyNote({
       }
     };
     
+    // Add event listeners
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
   };
@@ -290,7 +304,37 @@ export function StickyNote({
         >
           <div className="note-drag-handle w-full flex items-center">
             <i className="ri-drag-move-line text-gray-400 mr-2"></i>
-            <span className="text-sm font-medium truncate">Note</span>
+            {isEditingTitle ? (
+              <input
+                type="text"
+                className="text-sm font-medium bg-transparent border-b border-gray-300 focus:outline-none focus:border-primary w-full max-w-[120px]"
+                value={title}
+                autoFocus
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={() => {
+                  setIsEditingTitle(false);
+                  onUpdate(note.id, { title });
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setIsEditingTitle(false);
+                    onUpdate(note.id, { title });
+                  }
+                }}
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <span 
+                className="text-sm font-medium truncate cursor-text" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditingTitle(true);
+                }}
+                title="Click to edit title"
+              >
+                {title}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1">
             <div 

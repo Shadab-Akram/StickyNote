@@ -66,6 +66,7 @@ export class MemStorage implements IStorage {
     const note: Note = { 
       ...insertNote, 
       id,
+      title: insertNote.title || "Note",
       content: insertNote.content || "",
       userId: insertNote.userId || null,
       createdAt: now
