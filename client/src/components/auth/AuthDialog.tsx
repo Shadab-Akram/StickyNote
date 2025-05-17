@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { LoginForm } from "./LoginForm";
 import { RegisterForm } from "./RegisterForm";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AuthDialogProps {
   isOpen: boolean;
