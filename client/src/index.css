@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 20 14.3% 4.1%;
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 14.3% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 20 14.3% 4.1%;
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+  --primary: 207 90% 54%;
+  --primary-foreground: 211 100% 99%;
+  --secondary: 60 4.8% 95.9%;
+  --secondary-foreground: 24 9.8% 10%;
+  --accent: 60 4.8% 95.9%;
+  --accent-foreground: 24 9.8% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --ring: 20 14.3% 4.1%;
+  --radius: 0.5rem;
+  --chart-1: 30 100% 50%;
+  --chart-2: 60 100% 50%;
+  --chart-3: 90 100% 50%;
+  --chart-4: 120 100% 50%;
+  --chart-5: 180 100% 50%;
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 207 90% 54%;
+  --primary-foreground: 211 100% 99%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 240 4.9% 83.9%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground overflow-hidden;
+    touch-action: none;
+  }
+}
+
+.sticky-note {
+  touch-action: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s ease;
+}
+
+.dark .sticky-note {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+}
+
+.sticky-note:focus-within, .sticky-note.active {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 50 !important;
+}
+
+.sticky-note .resize-handle {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.sticky-note:hover .resize-handle, 
+.sticky-note:focus-within .resize-handle,
+.sticky-note.active .resize-handle {
+  opacity: 1;
+}
+
+[contenteditable] {
+  outline: none;
+}
+
+.color-picker {
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+/* Hide scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+/* Color classes for notes */
+.bg-yellow-100 { background-color: #fef9c3; }
+.bg-green-100 { background-color: #dcfce7; }
+.bg-blue-100 { background-color: #dbeafe; }
+.bg-purple-100 { background-color: #f3e8ff; }
+.bg-pink-100 { background-color: #fce7f3; }
+.bg-orange-100 { background-color: #ffedd5; }
+
+.dark .bg-yellow-200\/90 { background-color: rgba(254, 240, 138, 0.9); }
+.dark .bg-green-200\/90 { background-color: rgba(187, 247, 208, 0.9); }
+.dark .bg-blue-200\/90 { background-color: rgba(191, 219, 254, 0.9); }
+.dark .bg-purple-200\/90 { background-color: rgba(233, 213, 255, 0.9); }
+.dark .bg-pink-200\/90 { background-color: rgba(251, 207, 232, 0.9); }
+.dark .bg-orange-200\/90 { background-color: rgba(254, 215, 170, 0.9); }
+
+.border-yellow-200 { border-color: #fef08a; }
+.border-green-200 { border-color: #bbf7d0; }
+.border-blue-200 { border-color: #bfdbfe; }
+.border-purple-200 { border-color: #e9d5ff; }
+.border-pink-200 { border-color: #fbcfe8; }
+.border-orange-200 { border-color: #fed7aa; }
+
+.dark .border-yellow-300\/50 { border-color: rgba(253, 224, 71, 0.5); }
+.dark .border-green-300\/50 { border-color: rgba(134, 239, 172, 0.5); }
+.dark .border-blue-300\/50 { border-color: rgba(147, 197, 253, 0.5); }
+.dark .border-purple-300\/50 { border-color: rgba(216, 180, 254, 0.5); }
+.dark .border-pink-300\/50 { border-color: rgba(249, 168, 212, 0.5); }
+.dark .border-orange-300\/50 { border-color: rgba(253, 186, 116, 0.5); }
