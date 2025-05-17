@@ -3,6 +3,7 @@ import { ClientNote } from "@shared/schema";
 import { FormatToolbar } from "./FormatToolbar";
 import { ColorPicker } from "./ColorPicker";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface StickyNoteProps {
   note: ClientNote;
@@ -22,16 +23,25 @@ export function StickyNote({
   gridSize
 }: StickyNoteProps) {
   const noteRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [colorPickerPosition, setColorPickerPosition] = useState({ x: 0, y: 0 });
   const [isFormatToolbarOpen, setIsFormatToolbarOpen] = useState(false);
   const [formatToolbarPosition, setFormatToolbarPosition] = useState({ x: 0, y: 0 });
   
+  // Format date
   const formattedDate = new Date(note.createdAt).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
   });
+  
+  // Set initial content
+  useEffect(() => {
+    if (contentRef.current && note.content) {
+      contentRef.current.innerHTML = note.content;
+    }
+  }, []);
   
   // Handle drag functionality
   const handleDragStart = (e: React.MouseEvent) => {
@@ -142,9 +152,14 @@ export function StickyNote({
   
   // Update note content when user edits the text
   const handleContentChange = (e: React.FormEvent<HTMLDivElement>) => {
-    onUpdate(note.id, { 
-      content: e.currentTarget.innerHTML 
-    });
+    const content = e.currentTarget.innerHTML;
+    onUpdate(note.id, { content });
+  };
+  
+  // Handle delete note
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete(note.id);
   };
   
   // Bring note to front on click
@@ -192,6 +207,64 @@ export function StickyNote({
   // Apply format to selected text
   const handleFormatAction = (format: string) => {
     document.execCommand(format, false);
+    
+    // Make sure to update the content in state after formatting
+    if (contentRef.current) {
+      const content = contentRef.current.innerHTML;
+      onUpdate(note.id, { content });
+    }
+  };
+  
+  // Get appropriate colors based on the note color
+  const getColorClasses = () => {
+    switch(note.color) {
+      case 'yellow':
+        return "bg-amber-100 shadow-amber-200/50 dark:bg-amber-200/90";
+      case 'blue':
+        return "bg-blue-100 shadow-blue-200/50 dark:bg-blue-200/90";
+      case 'green':
+        return "bg-green-100 shadow-green-200/50 dark:bg-green-200/90";
+      case 'pink':
+        return "bg-pink-100 shadow-pink-200/50 dark:bg-pink-200/90";
+      case 'purple':
+        return "bg-purple-100 shadow-purple-200/50 dark:bg-purple-200/90";
+      default:
+        return "bg-yellow-100 shadow-yellow-200/50 dark:bg-yellow-200/90";
+    }
+  };
+  
+  const getBorderColor = () => {
+    switch(note.color) {
+      case 'yellow':
+        return "border-amber-200 dark:border-amber-300/50";
+      case 'blue':
+        return "border-blue-200 dark:border-blue-300/50";
+      case 'green':
+        return "border-green-200 dark:border-green-300/50";
+      case 'pink':
+        return "border-pink-200 dark:border-pink-300/50";
+      case 'purple':
+        return "border-purple-200 dark:border-purple-300/50";
+      default:
+        return "border-yellow-200 dark:border-yellow-300/50";
+    }
+  };
+  
+  const getColorButtonClass = () => {
+    switch(note.color) {
+      case 'yellow':
+        return "bg-amber-400";
+      case 'blue':
+        return "bg-blue-400";
+      case 'green':
+        return "bg-green-400";
+      case 'pink':
+        return "bg-pink-400";
+      case 'purple':
+        return "bg-purple-400";
+      default:
+        return "bg-yellow-400";
+    }
   };
   
   return (
@@ -200,8 +273,8 @@ export function StickyNote({
         ref={noteRef}
         onClick={handleClick}
         className={cn(
-          "sticky-note absolute rounded-md text-gray-800",
-          `bg-${note.color}-100 dark:bg-${note.color}-200/90 dark:text-gray-800`
+          "sticky-note absolute rounded-md text-gray-800 shadow-lg",
+          getColorClasses()
         )}
         style={{
           width: `${note.width}px`,
@@ -212,24 +285,39 @@ export function StickyNote({
         data-id={note.id}
       >
         <div 
-          className="note-header cursor-move flex justify-between p-2"
+          className="note-header cursor-move flex justify-between items-center p-2 bg-white/30 dark:bg-white/50 rounded-t-md"
           onMouseDown={handleDragStart}
         >
-          <div className="note-drag-handle w-full h-5"></div>
-          <div 
-            className={cn(
-              "color-picker-trigger cursor-pointer rounded-full w-5 h-5 border border-gray-300",
-              `bg-${note.color}-100`
-            )}
-            onClick={handleColorPickerOpen}
-          ></div>
+          <div className="note-drag-handle w-full flex items-center">
+            <i className="ri-drag-move-line text-gray-400 mr-2"></i>
+            <span className="text-sm font-medium truncate">Note</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div 
+              className={cn(
+                "color-picker-trigger cursor-pointer rounded-full w-5 h-5 border border-gray-200",
+                getColorButtonClass()
+              )}
+              onClick={handleColorPickerOpen}
+              title="Change color"
+            ></div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-6 w-6 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+              onClick={handleDelete}
+              title="Delete note"
+            >
+              <i className="ri-delete-bin-line text-sm"></i>
+            </Button>
+          </div>
         </div>
         
         <div className="note-content h-[calc(100%-60px)] p-3 overflow-auto">
           <div 
-            className="note-text" 
+            ref={contentRef}
+            className="note-text min-h-[40px]" 
             contentEditable
-            dangerouslySetInnerHTML={{ __html: note.content }}
             onInput={handleContentChange}
             onMouseUp={handleContentSelection}
             onKeyUp={handleContentSelection}
@@ -238,22 +326,16 @@ export function StickyNote({
         
         <div className={cn(
           "note-footer flex justify-between items-center p-2 border-t",
-          `border-${note.color}-200 dark:border-${note.color}-300/50`
+          getBorderColor()
         )}>
           <span className="text-xs text-gray-500 dark:text-gray-700">{formattedDate}</span>
-          <button 
-            className="delete-note text-gray-400 hover:text-red-500 dark:text-gray-600 dark:hover:text-red-400"
-            onClick={() => onDelete(note.id)}
+          <div 
+            className="resize-handle cursor-nwse-resize flex items-center justify-center"
+            onMouseDown={handleResizeStart}
+            title="Resize"
           >
-            <i className="ri-delete-bin-line"></i>
-          </button>
-        </div>
-        
-        <div 
-          className="resize-handle absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize"
-          onMouseDown={handleResizeStart}
-        >
-          <i className="ri-corner-right-down-line text-gray-400 text-xs"></i>
+            <i className="ri-corner-right-down-line text-gray-400 text-xs"></i>
+          </div>
         </div>
       </div>
       
