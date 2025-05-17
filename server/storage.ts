@@ -1,4 +1,9 @@
-import { notes, type Note, type InsertNote, users, type User, type InsertUser } from "@shared/schema";
+import { eq } from "drizzle-orm";
+import { 
+  notes, type Note, type InsertNote, 
+  users, type User, type InsertUser
+} from "@shared/schema";
+import { db } from "./db";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -13,6 +18,7 @@ export interface IStorage {
   deleteNote(id: number): Promise<void>;
 }
 
+// In-memory storage for when database is not needed
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private notes: Map<number, Note>;
@@ -38,7 +44,8 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.userIdCounter++;
-    const user: User = { ...insertUser, id };
+    const now = new Date();
+    const user: User = { ...insertUser, id, createdAt: now };
     this.users.set(id, user);
     return user;
   }
@@ -59,6 +66,8 @@ export class MemStorage implements IStorage {
     const note: Note = { 
       ...insertNote, 
       id,
+      content: insertNote.content || "",
+      userId: insertNote.userId || null,
       createdAt: now
     };
     this.notes.set(id, note);
@@ -79,4 +88,56 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// PostgreSQL implementation using Drizzle
+export class DbStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result.length ? result[0] : undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.username, username));
+    return result.length ? result[0] : undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const result = await db.insert(users).values(insertUser).returning();
+    return result[0];
+  }
+  
+  async getNotesByUserId(userId: number): Promise<Note[]> {
+    return db.select().from(notes).where(eq(notes.userId, userId));
+  }
+  
+  async getNote(id: number): Promise<Note | undefined> {
+    const result = await db.select().from(notes).where(eq(notes.id, id));
+    return result.length ? result[0] : undefined;
+  }
+  
+  async createNote(insertNote: InsertNote): Promise<Note> {
+    const result = await db.insert(notes).values({
+      ...insertNote,
+      content: insertNote.content || "",
+      userId: insertNote.userId || null
+    }).returning();
+    return result[0];
+  }
+  
+  async updateNote(id: number, updates: Partial<Note>): Promise<Note | undefined> {
+    const result = await db
+      .update(notes)
+      .set(updates)
+      .where(eq(notes.id, id))
+      .returning();
+    
+    return result.length ? result[0] : undefined;
+  }
+  
+  async deleteNote(id: number): Promise<void> {
+    await db.delete(notes).where(eq(notes.id, id));
+  }
+}
+
+// Export the appropriate storage implementation
+const useDatabase = true; // Set to true to use the database, false to use in-memory storage
+export const storage = useDatabase ? new DbStorage() : new MemStorage();

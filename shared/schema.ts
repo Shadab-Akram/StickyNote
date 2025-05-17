@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -6,6 +6,7 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const notes = pgTable("notes", {
@@ -45,10 +46,10 @@ export type User = typeof users.$inferSelect;
 export type InsertNote = z.infer<typeof insertNoteSchema>;
 export type Note = typeof notes.$inferSelect;
 
-// Client-side note type (localStorage version)
+// Client-side note type (with string ID for client-side usage)
 export const noteSchema = z.object({
   id: z.string(),
-  content: z.string(),
+  content: z.string().default(""),
   x: z.number(),
   y: z.number(),
   width: z.number(),
@@ -56,6 +57,36 @@ export const noteSchema = z.object({
   color: z.string(),
   zIndex: z.number(),
   createdAt: z.string(),
+  userId: z.number().optional(),
 });
+
+// For converting between database and client models
+export function dbNoteToClientNote(note: Note): ClientNote {
+  return {
+    id: note.id.toString(),
+    content: note.content || "",
+    x: note.x,
+    y: note.y,
+    width: note.width,
+    height: note.height,
+    color: note.color,
+    zIndex: note.zIndex,
+    createdAt: note.createdAt.toISOString(),
+    userId: note.userId || undefined
+  };
+}
+
+export function clientNoteToDbNote(note: ClientNote, userId?: number): InsertNote {
+  return {
+    userId: userId || null,
+    content: note.content,
+    x: note.x,
+    y: note.y, 
+    width: note.width,
+    height: note.height,
+    color: note.color,
+    zIndex: note.zIndex
+  };
+}
 
 export type ClientNote = z.infer<typeof noteSchema>;
