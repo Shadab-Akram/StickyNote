@@ -144,3 +144,15 @@
 .dark .border-purple-300\/50 { border-color: rgba(216, 180, 254, 0.5); }
 .dark .border-pink-300\/50 { border-color: rgba(249, 168, 212, 0.5); }
 .dark .border-orange-300\/50 { border-color: rgba(253, 186, 116, 0.5); }
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

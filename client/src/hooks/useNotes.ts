@@ -1,172 +1,156 @@
-import { useState, useEffect } from 'react';
-import { ClientNote, noteSchema } from '@shared/schema';
+import { useState, useEffect, useCallback } from 'react';
+import { noteSchema, Note } from '@/lib/schema';
 import { useToast } from '@/hooks/use-toast';
 import { nanoid } from 'nanoid';
 
-interface NewNoteOptions {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  color: string;
-}
-
 export function useNotes() {
-  const [notes, setNotes] = useState<ClientNote[]>([]);
-  const [history, setHistory] = useState<ClientNote[][]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [history, setHistory] = useState<Note[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [highestZIndex, setHighestZIndex] = useState(10);
   const { toast } = useToast();
   
-  // Load notes from localStorage on initial render
+  // Load notes from localStorage on mount
   useEffect(() => {
+    const savedNotes = localStorage.getItem("notes");
+    if (savedNotes) {
     try {
-      const savedNotes = localStorage.getItem('stickyNotes');
-      if (savedNotes) {
         const parsedNotes = JSON.parse(savedNotes);
-        const validNotes = parsedNotes.filter(note => {
-          try {
-            noteSchema.parse(note);
-            return true;
-          } catch (error) {
-            return false;
-          }
-        });
-        
-        setNotes(validNotes);
-        
-        // Find highest z-index
-        const maxZ = validNotes.reduce((max, note) => 
-          Math.max(max, note.zIndex || 0), 10);
-        setHighestZIndex(maxZ);
-        
-        // Initialize history with current state
-        setHistory([validNotes]);
+        setNotes(parsedNotes);
+        setHistory([parsedNotes]);
         setHistoryIndex(0);
-      }
-    } catch (error) {
-      console.error('Failed to load notes from localStorage', error);
-      toast({
-        title: 'Failed to load notes',
-        description: 'Could not load your saved notes.',
-        variant: 'destructive'
+          } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load saved notes",
+          variant: "destructive",
       });
+      }
     }
   }, [toast]);
   
   // Save notes to localStorage whenever they change
   useEffect(() => {
-    try {
-      localStorage.setItem('stickyNotes', JSON.stringify(notes));
-    } catch (error) {
-      console.error('Failed to save notes to localStorage', error);
-      toast({
-        title: 'Failed to save notes',
-        description: 'Could not save your notes.',
-        variant: 'destructive'
-      });
-    }
-  }, [notes, toast]);
+    localStorage.setItem("notes", JSON.stringify(notes));
+  }, [notes]);
   
-  // Add a new note
-  const addNote = (options: NewNoteOptions) => {
-    const newZIndex = highestZIndex + 1;
-    setHighestZIndex(newZIndex);
+  // Add to history
+  const addToHistory = useCallback((newNotes: Note[]) => {
+    // If we're not at the end of history, remove future states
+    if (historyIndex < history.length - 1) {
+      setHistory(prev => prev.slice(0, historyIndex + 1));
+    }
     
-    const newNote: ClientNote = {
+    // Limit history to 50 states to prevent excessive memory usage
+    setHistory(prev => {
+      const newHistory = [...prev, newNotes];
+      if (newHistory.length > 50) {
+        return newHistory.slice(newHistory.length - 50);
+    }
+      return newHistory;
+    });
+    
+    setHistoryIndex(prev => Math.min(prev + 1, 49));
+  }, [history, historyIndex]);
+  
+  const addNote = (note: {
+    title: string;
+    content: string;
+    position: { x: number; y: number };
+    size: { width: number; height: number };
+    color?: string;
+  }) => {
+    const newNote: Note = {
+      ...note,
       id: nanoid(),
-      content: '',
-      x: options.x,
-      y: options.y,
-      width: options.width,
-      height: options.height,
-      color: options.color,
-      zIndex: newZIndex,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      zIndex: notes.length + 1
     };
     
-    const updatedNotes = [...notes, newNote];
-    setNotes(updatedNotes);
-    
-    // Add to history
-    addToHistory(updatedNotes);
-    
-    return newNote;
+    const newNotes = [...notes, newNote];
+    setNotes(newNotes);
+    addToHistory(newNotes);
   };
   
-  // Update an existing note
-  const updateNote = (id: string, updates: Partial<ClientNote>) => {
-    const updatedNotes = notes.map(note => 
-      note.id === id ? { ...note, ...updates } : note
+  const updateNote = (id: string, updates: Partial<Note>) => {
+    const noteExists = notes.some(note => note.id === id);
+    
+    if (!noteExists) {
+      return;
+    }
+    
+    // Special handling for position updates to prevent disappearing notes
+    if (updates.position) {
+      // Validate position values are valid numbers
+      const { x, y } = updates.position;
+      if (isNaN(x) || isNaN(y)) {
+        return;
+      }
+      
+      // Ensure values are within reasonable bounds
+      if (x < 0 || y < 0 || x > 20000 || y > 20000) {
+        // Allow the update to proceed anyway, but be cautious
+      }
+    }
+    
+    const newNotes = notes.map((note) =>
+      note.id === id
+        ? { ...note, ...updates, updatedAt: new Date().toISOString() }
+        : note
     );
     
-    setNotes(updatedNotes);
-    
-    // If z-index was updated, track the new highest value
-    if (updates.zIndex && updates.zIndex > highestZIndex) {
-      setHighestZIndex(updates.zIndex);
-    }
-    
-    // Debounced add to history
-    if (updates.x !== undefined || updates.y !== undefined || 
-        updates.width !== undefined || updates.height !== undefined || 
-        updates.color !== undefined) {
-      // Only add to history for position, size, or color changes
-      // (not content changes which happen frequently during typing)
-      addToHistory(updatedNotes);
-    }
+    setNotes(newNotes);
+    addToHistory(newNotes);
   };
   
-  // Delete a note
   const deleteNote = (id: string) => {
-    const updatedNotes = notes.filter(note => note.id !== id);
-    setNotes(updatedNotes);
-    
-    // Add to history
-    addToHistory(updatedNotes);
+    const newNotes = notes.filter((note) => note.id !== id);
+    setNotes(newNotes);
+    addToHistory(newNotes);
   };
   
-  // Clear all notes
+  const moveNote = (id: string, position: { x: number; y: number }) => {
+    updateNote(id, { position });
+  };
+  
+  const resizeNote = (id: string, size: { width: number; height: number }) => {
+    updateNote(id, { size });
+  };
+  
+  const bringToFront = (id: string) => {
+    const maxZIndex = Math.max(...notes.map(note => note.zIndex), 0);
+    updateNote(id, { zIndex: maxZIndex + 1 });
+  };
+  
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+  
+  const undo = useCallback(() => {
+    if (canUndo) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setNotes(history[newIndex]);
+    }
+  }, [canUndo, history, historyIndex]);
+  
+  const redo = useCallback(() => {
+    if (canRedo) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setNotes(history[newIndex]);
+    }
+  }, [canRedo, history, historyIndex]);
+  
+  // Add a special function to clear all notes without adding to history
   const clearAllNotes = () => {
     setNotes([]);
     
-    // Add to history
-    addToHistory([]);
-  };
-  
-  // Add current state to history
-  const addToHistory = (newState: ClientNote[]) => {
-    // Truncate future history if we've done undo operations
-    const newHistory = history.slice(0, historyIndex + 1);
+    // Reset history instead of adding to it
+    setHistory([[]]);
+    setHistoryIndex(0);
     
-    // Add new state to history
-    const updatedHistory = [...newHistory, [...newState]];
-    
-    // Limit history size (to prevent memory issues)
-    const limitedHistory = updatedHistory.length > 50 
-      ? updatedHistory.slice(updatedHistory.length - 50) 
-      : updatedHistory;
-    
-    setHistory(limitedHistory);
-    setHistoryIndex(limitedHistory.length - 1);
-  };
-  
-  // Undo operation
-  const undo = () => {
-    if (historyIndex > 0) {
-      const newIndex = historyIndex - 1;
-      setHistoryIndex(newIndex);
-      setNotes([...history[newIndex]]);
-    }
-  };
-  
-  // Redo operation
-  const redo = () => {
-    if (historyIndex < history.length - 1) {
-      const newIndex = historyIndex + 1;
-      setHistoryIndex(newIndex);
-      setNotes([...history[newIndex]]);
-    }
+    // Save empty array to localStorage
+    localStorage.setItem("notes", "[]");
   };
   
   return {
@@ -174,10 +158,13 @@ export function useNotes() {
     addNote,
     updateNote,
     deleteNote,
-    clearAllNotes,
-    canUndo: historyIndex > 0,
-    canRedo: historyIndex < history.length - 1,
+    moveNote,
+    resizeNote,
+    bringToFront,
     undo,
-    redo
+    redo,
+    canUndo,
+    canRedo,
+    clearAllNotes
   };
 }

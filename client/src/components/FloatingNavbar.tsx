@@ -1,0 +1,457 @@
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Plus, ZoomIn, ZoomOut, RotateCcw, Grid, Hand, Maximize, Minimize, Undo, Redo, HelpCircle, Settings, Trash2, Sun, Moon, Menu, X } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
+import { useState, useEffect } from "react";
+
+interface FloatingNavbarProps {
+  scale: number;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onReset: () => void;
+  isGridVisible: boolean;
+  onToggleGrid: () => void;
+  onAddNote: () => void;
+  isDragMode: boolean;
+  onToggleDragMode: () => void;
+  isFullscreen: boolean;
+  onToggleFullscreen: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onOpenSettings: () => void;
+  onClearAll: () => void;
+  onOpenHelp: () => void;
+}
+
+export function FloatingNavbar({
+  scale,
+  onZoomIn,
+  onZoomOut,
+  onReset,
+  isGridVisible,
+  onToggleGrid,
+  onAddNote,
+  isDragMode,
+  onToggleDragMode,
+  isFullscreen,
+  onToggleFullscreen,
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
+  onOpenSettings,
+  onClearAll,
+  onOpenHelp
+}: FloatingNavbarProps) {
+  const { theme, setTheme } = useTheme();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  const toggleDarkMode = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
+  // Define menu items for vertical menu in logical order
+  const menuItems = [
+    { icon: <Grid className="h-5 w-5" />, label: "Grid", onClick: onToggleGrid, active: isGridVisible },
+    { icon: theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />, label: "Theme", onClick: toggleDarkMode },
+    { icon: isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />, label: isFullscreen ? "Exit Fullscreen" : "Fullscreen", onClick: onToggleFullscreen },
+    { icon: <Settings className="h-5 w-5" />, label: "Settings", onClick: onOpenSettings },
+    { icon: <HelpCircle className="h-5 w-5" />, label: "Help", onClick: onOpenHelp },
+    { icon: <RotateCcw className="h-5 w-5" />, label: "Reset View", onClick: onReset },
+    { icon: <Trash2 className="h-5 w-5" />, label: "Clear All", onClick: onClearAll }
+  ];
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (isMobileMenuOpen && !(e.target as HTMLElement).closest('.mobile-menu') && 
+          !(e.target as HTMLElement).closest('.mobile-menu-toggle')) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [isMobileMenuOpen]);
+
+  if (isMobile) {
+    return (
+      <>
+        {/* Mobile floating navbar - minimal version */}
+        <div className="fixed top-4 left-0 right-0 flex justify-center z-50">
+          <div className="flex items-center gap-2 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg py-2 px-3 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
+            {onUndo && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onUndo}
+                    disabled={!canUndo}
+                    className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <Undo className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Undo</TooltipContent>
+              </Tooltip>
+            )}
+
+            {onRedo && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onRedo}
+                    disabled={!canRedo}
+                    className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <Redo className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Redo</TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile bottom toolbar */}
+        <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50">
+          <div className="flex items-center gap-2 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg py-2 px-3 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onAddNote}
+                  className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Add Note</TooltipContent>
+            </Tooltip>
+
+            <div className="text-xs font-medium px-1 min-w-[40px] text-center">
+              {Math.round(scale * 100)}%
+            </div>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onToggleDragMode}
+                  className={`h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 ${isDragMode ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+                >
+                  <Hand className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Toggle Hand Tool</TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+
+        {/* Mobile menu toggle button with vertical menu items */}
+        <div className="fixed bottom-4 right-4 z-50 mobile-menu-toggle">
+          {/* Vertical staggered menu items */}
+          {menuItems.map((item, index) => (
+            <div 
+              key={index}
+              style={{ 
+                transitionDelay: `${isMobileMenuOpen ? index * 40 : (menuItems.length - index - 1) * 30}ms`,
+                bottom: isMobileMenuOpen ? `${(index + 1) * 52}px` : '0px',
+                opacity: isMobileMenuOpen ? 1 : 0,
+                transform: isMobileMenuOpen ? 'scale(1)' : 'scale(0.5)',
+                pointerEvents: isMobileMenuOpen ? 'auto' : 'none'
+              }}
+              className="absolute right-1 transition-all duration-300 ease-out"
+            >
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="default"
+                    size="icon"
+                    onClick={item.onClick}
+                    className={`h-10 w-10 rounded-full shadow-md ${item.active ? 'bg-primary' : 'bg-slate-700/90 dark:bg-slate-700/90 text-white'} hover:bg-primary/90 dark:hover:bg-primary/90`}
+                  >
+                    {item.icon}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  {item.label}
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          ))}
+
+          {/* Main menu button */}
+          <Button
+            variant="default"
+            size="icon"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 z-10 relative"
+          >
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </Button>
+        </div>
+      </>
+    );
+  }
+
+  // Desktop version
+  return (
+    <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center gap-2 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg py-2 px-3 z-50 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onAddNote}
+            className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Add Note</TooltipContent>
+      </Tooltip>
+
+      {onUndo && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onUndo}
+              disabled={!canUndo}
+              className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <Undo className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Undo</TooltipContent>
+        </Tooltip>
+      )}
+
+      {onRedo && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onRedo}
+              disabled={!canRedo}
+              className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <Redo className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Redo</TooltipContent>
+        </Tooltip>
+      )}
+
+      <div className="h-4 border-r border-gray-300 dark:border-gray-600 mx-1" />
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleDragMode}
+            className={`h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 ${isDragMode ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+          >
+            <Hand className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Toggle Hand Tool</TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleGrid}
+            className={`h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 ${isGridVisible ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Toggle Grid</TooltipContent>
+      </Tooltip>
+
+      <div className="h-4 border-r border-gray-300 dark:border-gray-600 mx-1" />
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onZoomOut}
+            className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            disabled={scale <= 0.25}
+          >
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Zoom Out</TooltipContent>
+      </Tooltip>
+
+      <div className="text-xs font-medium px-1 min-w-[40px] text-center">
+        {Math.round(scale * 100)}%
+      </div>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onZoomIn}
+            className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            disabled={scale >= 2}
+          >
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Zoom In</TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onReset}
+            className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Reset View</TooltipContent>
+      </Tooltip>
+      
+      <div className="h-4 border-r border-gray-300 dark:border-gray-600 mx-1" />
+      
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleFullscreen}
+            className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}</TooltipContent>
+      </Tooltip>
+      
+      <div className="h-4 border-r border-gray-300 dark:border-gray-600 mx-1" />
+      
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenSettings}
+            className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Settings</TooltipContent>
+      </Tooltip>
+      
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClearAll}
+            className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Clear All</TooltipContent>
+      </Tooltip>
+      
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenHelp}
+            className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <HelpCircle className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Help Guide</TooltipContent>
+      </Tooltip>
+      
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleDarkMode}
+            className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Toggle Theme</TooltipContent>
+      </Tooltip>
+    </div>
+  );
+}
+
+// Helper component for mobile tool buttons
+function ToolButton({ 
+  onClick, 
+  icon, 
+  label, 
+  disabled = false, 
+  active = false 
+}: { 
+  onClick: () => void; 
+  icon: React.ReactNode; 
+  label: string; 
+  disabled?: boolean; 
+  active?: boolean;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onClick}
+        disabled={disabled}
+        className={`h-10 w-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 ${active ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+      >
+        {icon}
+      </Button>
+      <span className="text-xs font-medium">{label}</span>
+    </div>
+  );
+} 

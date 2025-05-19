@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import { ThemeProvider } from "./components/ThemeProvider";
-import { AuthProvider } from "./contexts/AuthContext";
 
 function Router() {
   return (
@@ -21,12 +20,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="sticky-notes-theme">
-        <AuthProvider>
           <TooltipProvider>
             <Toaster />
             <Router />
           </TooltipProvider>
-        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
