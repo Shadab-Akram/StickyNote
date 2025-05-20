@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Canvas } from "@/components/Canvas";
+import { Canvas } from "../components/Canvas";
 import { Settings } from "@/components/Settings";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TutorialDialog } from "@/components/TutorialDialog";
