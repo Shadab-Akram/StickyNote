@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Canvas } from "../components/Canvas";
+import { Canvas } from "@/components/Canvas";
 import { Settings } from "@/components/Settings";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TutorialDialog } from "@/components/TutorialDialog";
@@ -158,15 +158,6 @@ export default function Home() {
 
   return (
     <div className="h-screen w-full overflow-hidden flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
-
-    <div>
-      <h2>Welcome to Sticky Note App</h2>
-      <div style={{ border: "2px solid blue", width: "100vw", height: "100vh" }}>
-        {/* Your Canvas or main UI here */}
-        <p style={{ color: "green" }}>Canvas should be here</p>
-      </div>
-    </div>
-
       <Canvas 
         notes={notes}
         isGridVisible={isGridVisible}
