@@ -23,10 +23,10 @@ export default defineConfig(async () => ({
       "@assets": path.resolve(__dirname, "attached_assets"),
     },
   },
-  // ✅ Removed incorrect "client" root
-  root: ".", // optional, Vite assumes "." by default
+
+  root: ".", 
   build: {
-    outDir: "dist", // simple output path
+    outDir: "dist", 
     emptyOutDir: true,
   },
 }));
