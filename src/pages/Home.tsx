@@ -159,7 +159,13 @@ export default function Home() {
   return (
     <div className="h-screen w-full overflow-hidden flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
 
-<h2>Welcome to Sticky Note App</h2>
+    <div>
+      <h2>Welcome to Sticky Note App</h2>
+      <div style={{ border: "2px solid blue", width: "100vw", height: "100vh" }}>
+        {/* Your Canvas or main UI here */}
+        <p style={{ color: "green" }}>Canvas should be here</p>
+      </div>
+    </div>
 
       <Canvas 
         notes={notes}
