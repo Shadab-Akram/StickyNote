@@ -16,17 +16,17 @@ function Router() {
   );
 }
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="sticky-notes-theme">
-          <TooltipProvider>
+        <TooltipProvider>
+          <div className="h-screen w-full overflow-hidden flex flex-col bg-background text-foreground">
             <Toaster />
             <Router />
-          </TooltipProvider>
+          </div>
+        </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
 }
-
-export default App;

@@ -16,12 +16,16 @@
         position: fixed;
         width: 100%;
         height: 100%;
+        margin: 0;
+        padding: 0;
       }
       
       #root {
         width: 100%;
         height: 100%;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
       }
       
       /* Fix for mobile touch issues */
@@ -32,7 +36,14 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Check for dark mode preference
+      if (localStorage.getItem('sticky-notes-theme') === 'dark' || 
+          (!localStorage.getItem('sticky-notes-theme') && 
+           window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
-
   </body>
 </html>

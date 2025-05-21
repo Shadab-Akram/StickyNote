@@ -60,26 +60,26 @@ export default function Home() {
       color = defaultNoteColor;
     }
     
-    // Get the current viewport dimensions
+    // Get the current viewport dimensions and scroll position
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     
-    // Calculate a position within the visible viewport,
-    // but we need to use canvas coordinates (which are centered at 5000,5000)
-    const CANVAS_CENTER_X = 5000;
-    const CANVAS_CENTER_Y = 5000;
+    // Calculate the center position in canvas coordinates
+    // We need to account for the current canvas position and scale
+    const canvasRect = document.getElementById('canvas-content')?.getBoundingClientRect();
+    if (!canvasRect) return;
+
+    // Calculate the center of the viewport in canvas coordinates
+    const viewportCenterX = (viewportWidth / 2 - canvasRect.left) / scale;
+    const viewportCenterY = (viewportHeight / 2 - canvasRect.top) / scale;
     
-    // Add randomization to spread notes out
-    const randomOffsetX = Math.floor(Math.random() * 400) - 200; // -200 to 200
-    const randomOffsetY = Math.floor(Math.random() * 400) - 200; // -200 to 200
-    
-    // Create note at the canvas center point plus a small random offset
+    // Create note at the calculated center position
     addNote({
       title: "New Note",
       content: "",
       position: { 
-        x: CANVAS_CENTER_X + randomOffsetX, 
-        y: CANVAS_CENTER_Y + randomOffsetY 
+        x: viewportCenterX - width / 2,
+        y: viewportCenterY - height / 2
       },
       size: { width, height },
       color
@@ -106,55 +106,6 @@ export default function Home() {
     setDefaultNoteSize(settings.defaultNoteSize);
     setIsSettingsOpen(false);
   };
-
-  const handleZoomIn = () => {
-    setScale(prev => Math.min(prev + 0.1, 2));
-  };
-
-  const handleZoomOut = () => {
-    setScale(prev => Math.max(prev - 0.1, 0.25));
-  };
-
-  const handleZoomReset = () => {
-    setScale(1);
-  };
-
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        switch (e.key) {
-          case '+':
-            e.preventDefault();
-            handleZoomIn();
-            break;
-          case '-':
-            e.preventDefault();
-            handleZoomOut();
-            break;
-          case '0':
-            e.preventDefault();
-            handleZoomReset();
-            break;
-          case 'z':
-            e.preventDefault();
-            if (e.shiftKey) {
-              redo();
-            } else {
-              undo();
-            }
-            break;
-          case 'y':
-            e.preventDefault();
-            redo();
-            break;
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleZoomIn, handleZoomOut, handleZoomReset, undo, redo]);
 
   return (
     <div className="h-screen w-full overflow-hidden flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">

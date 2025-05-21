@@ -5,7 +5,23 @@ import { FloatingNavbar } from "./FloatingNavbar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Note } from "@/lib/schema";
-import { Maximize, RefreshCw, Minimize, Map } from "lucide-react";
+import { Maximize, RefreshCw, Minimize, Map, AlertTriangle } from "lucide-react";
+
+// Error Fallback component
+function ErrorFallback({ error, resetCanvas }: { error: Error, resetCanvas: () => void }) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center bg-red-50 dark:bg-red-900/20 p-8">
+      <AlertTriangle className="h-12 w-12 text-red-500 mb-4" />
+      <h3 className="text-xl font-bold mb-2">Canvas Error</h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 text-center max-w-md">
+        Something went wrong with the canvas rendering: {error.message}
+      </p>
+      <Button onClick={resetCanvas} variant="default">
+        Reset Canvas
+      </Button>
+    </div>
+  );
+}
 
 interface CanvasProps {
   notes: Note[];
@@ -52,11 +68,13 @@ export function Canvas({
   const [isDragMode, setIsDragMode] = useState(false);
   const zoomTimeoutRef = useRef<number | null>(null);
   const lastTouchDistanceRef = useRef<number | null>(null);
+  const [hasError, setHasError] = useState<Error | null>(null);
   
-  // Canvas size constants - canvas center point is at 5000, 5000
-  const canvasDimensions = { width: 10000, height: 10000 };
-  const canvasCenterX = 5000;
-  const canvasCenterY = 5000;
+  // Canvas size constants - reduce size for better performance
+  const canvasDimensions = { width: 3000, height: 3000 };
+  // Set center point to the middle of our dimensions
+  const canvasCenterX = canvasDimensions.width / 2;
+  const canvasCenterY = canvasDimensions.height / 2;
   
   const [isFullscreen, setIsFullscreen] = useState(false);
   
@@ -74,23 +92,32 @@ export function Canvas({
     if (!canvas) return;
   
     // Calculate position to center the canvas center point in the viewport
-    const centerX = (canvas.clientWidth / 2) - (canvasCenterX * scale);
-    const centerY = (canvas.clientHeight / 2) - (canvasCenterY * scale);
+    // Use more conservative values
+    const centerX = 0;
+    const centerY = 0;
     
     console.log('Centering canvas at:', { x: centerX, y: centerY, scale });
+    
+    // Force valid coordinates
     setPosition({
       x: centerX,
       y: centerY
     });
   }, [scale]);
 
-  // Initialize canvas position on load
+  // Initialize canvas position on load - force immediate execution
   useEffect(() => {
+    // Force initial position immediately
+    setPosition({ x: 0, y: 0 });
+    
+    // Then try centering
     centerCanvas();
     
     // Also re-center when window is resized
     window.addEventListener('resize', centerCanvas);
-    return () => window.removeEventListener('resize', centerCanvas);
+    return () => {
+      window.removeEventListener('resize', centerCanvas);
+    };
   }, [centerCanvas]);
   
   // Canvas zoom in/out
@@ -122,59 +149,43 @@ export function Canvas({
         e.preventDefault();
         
         // Calculate delta based on wheel direction
-        const delta = e.deltaY < 0 ? 0.05 : -0.05;
-        
-        // Get canvas content element
-        const content = contentRef.current;
-        if (!content) return;
+        const delta = e.deltaY < 0 ? 0.1 : -0.1;
         
         // Get mouse position relative to viewport
         const mouseX = e.clientX;
         const mouseY = e.clientY;
         
-        // Calculate the position of the mouse relative to the canvas content's center
-        const contentRect = content.getBoundingClientRect();
-        const contentCenterX = contentRect.left + (contentRect.width / 2);
-        const contentCenterY = contentRect.top + (contentRect.height / 2);
+        // Get canvas content element
+        const content = contentRef.current;
+        if (!content) return;
         
-        // Get old scale for calculations
-        const oldScale = scale;
+        // Get the current transform values
+        const contentRect = content.getBoundingClientRect();
+        
+        // Calculate the mouse position relative to the canvas content
+        const mouseXRelative = mouseX - contentRect.left;
+        const mouseYRelative = mouseY - contentRect.top;
+        
+        // Calculate the mouse position in canvas coordinates
+        const mouseXCanvas = mouseXRelative / scale;
+        const mouseYCanvas = mouseYRelative / scale;
         
         // Calculate new scale
         const newScale = Math.min(Math.max(scale + delta, 0.25), 2);
         
-        // Calculate scale factor
-        const scaleFactor = newScale / oldScale;
+        // Calculate the new position to keep the mouse point fixed
+        const newX = mouseX - mouseXCanvas * newScale;
+        const newY = mouseY - mouseYCanvas * newScale;
         
-        // Calculate the offset that maintains the point under the mouse in the same position
-        const dx = (mouseX - contentCenterX) * (1 - scaleFactor);
-        const dy = (mouseY - contentCenterY) * (1 - scaleFactor);
-        
-        // Clear previous timeout to prevent rapid updates
-        if (zoomTimeoutRef.current !== null) {
-          window.clearTimeout(zoomTimeoutRef.current);
-        }
-        
-        // Update scale first
+        // Update scale and position
         onScaleChange(newScale);
-        
-        // Then adjust position to keep the point under the cursor fixed with a small delay for smoothness
-        zoomTimeoutRef.current = window.setTimeout(() => {
-          setPosition(prev => ({
-            x: prev.x + dx,
-            y: prev.y + dy
-          }));
-          zoomTimeoutRef.current = null;
-        }, 5);
+        setPosition({ x: newX, y: newY });
       }
     };
 
     canvas.addEventListener('wheel', handleWheel, { passive: false });
     return () => {
       canvas.removeEventListener('wheel', handleWheel);
-      if (zoomTimeoutRef.current !== null) {
-        window.clearTimeout(zoomTimeoutRef.current);
-      }
     };
   }, [scale, onScaleChange]);
   
@@ -235,20 +246,15 @@ export function Canvas({
     }
   };
 
+  // Handle touch zoom (pinch)
   const handleTouchMove = (e: React.TouchEvent) => {
-    // Using CSS to prevent scrolling instead of preventDefault
-    
-    // Single finger for panning
-    if (e.touches.length === 1 && isDragging) {
-      setPosition({
-        x: e.touches[0].clientX - dragStart.x,
-        y: e.touches[0].clientY - dragStart.y
-      });
-    }
-    // Two fingers for pinch-to-zoom
-    else if (e.touches.length === 2 && lastTouchDistanceRef.current !== null) {
+    if (e.touches.length === 2 && lastTouchDistanceRef.current !== null) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
+      
+      // Calculate midpoint between touches
+      const midX = (touch1.clientX + touch2.clientX) / 2;
+      const midY = (touch1.clientY + touch2.clientY) / 2;
       
       // Calculate new distance
       const newDistance = Math.hypot(
@@ -256,43 +262,39 @@ export function Canvas({
         touch2.clientY - touch1.clientY
       );
       
-      // Calculate midpoint between touches
-      const midX = (touch1.clientX + touch2.clientX) / 2;
-      const midY = (touch1.clientY + touch2.clientY) / 2;
-      
-      // Calculate scale change
-      const distanceChange = newDistance - lastTouchDistanceRef.current;
-      const scaleDelta = distanceChange * 0.005; // Adjust sensitivity
-      
       // Get content element for calculations
       const content = contentRef.current;
       if (!content) return;
       
-      // Calculate position relative to content
+      // Get the current transform values
       const contentRect = content.getBoundingClientRect();
-      const contentCenterX = contentRect.left + (contentRect.width / 2);
-      const contentCenterY = contentRect.top + (contentRect.height / 2);
       
-      // Calculate new scale
-      const oldScale = scale;
+      // Calculate the touch midpoint relative to the canvas content
+      const midXRelative = midX - contentRect.left;
+      const midYRelative = midY - contentRect.top;
+      
+      // Calculate the touch midpoint in canvas coordinates
+      const midXCanvas = midXRelative / scale;
+      const midYCanvas = midYRelative / scale;
+      
+      // Calculate scale change
+      const distanceChange = newDistance - lastTouchDistanceRef.current;
+      const scaleDelta = distanceChange * 0.005; // Adjust sensitivity
       const newScale = Math.min(Math.max(scale + scaleDelta, 0.25), 2);
       
-      // Calculate scale factor
-      const scaleFactor = newScale / oldScale;
+      // Calculate the new position to keep the midpoint fixed
+      const newX = midX - midXCanvas * newScale;
+      const newY = midY - midYCanvas * newScale;
       
-      // Calculate position offset to keep pinch midpoint fixed
-      const dx = (midX - contentCenterX) * (1 - scaleFactor);
-      const dy = (midY - contentCenterY) * (1 - scaleFactor);
-      
-      // Update scale and remember new distance
+      // Update scale and position
       lastTouchDistanceRef.current = newDistance;
       onScaleChange(newScale);
-      
-      // Update position
-      setPosition(prev => ({
-        x: prev.x + dx,
-        y: prev.y + dy
-      }));
+      setPosition({ x: newX, y: newY });
+    } else if (e.touches.length === 1 && isDragging) {
+      setPosition({
+        x: e.touches[0].clientX - dragStart.x,
+        y: e.touches[0].clientY - dragStart.y
+      });
     }
   };
 
@@ -365,11 +367,41 @@ export function Canvas({
     setIsDragMode(prevMode => !prevMode);
   }, []);
 
+  // Error handling to capture rendering issues
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error('Canvas error:', event.error);
+      setHasError(event.error);
+      // Prevent the default error handling
+      event.preventDefault();
+    };
+    
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+  
+  // Reset canvas on error
+  const handleResetCanvas = () => {
+    setHasError(null);
+    setPosition({ x: 0, y: 0 });
+    onScaleChange(1);
+    // Force a refresh after reset
+    setTimeout(() => {
+      centerCanvas();
+    }, 100);
+  };
+  
+  // If there's an error, show the error fallback
+  if (hasError) {
+    return <ErrorFallback error={hasError} resetCanvas={handleResetCanvas} />;
+  }
+  
   return (
     <div 
       ref={canvasRef}
       id="canvas" 
-      className="relative flex-1 overflow-hidden"
+      className="relative flex-1 overflow-hidden bg-gray-50 dark:bg-gray-900"
+      style={{ width: '100%', height: '100%' }}
     >
       {/* Fixed canvas background with grid */}
       <div 
@@ -382,7 +414,9 @@ export function Canvas({
             ? `linear-gradient(to right, rgba(229, 231, 235, 0.5) 1px, transparent 1px),
                linear-gradient(to bottom, rgba(229, 231, 235, 0.5) 1px, transparent 1px)`
             : 'none',
-          backgroundSize: `${scaledGridSize}px ${scaledGridSize}px`
+          backgroundSize: `${scaledGridSize}px ${scaledGridSize}px`,
+          width: '100%',
+          height: '100%'
         }}
         onMouseDown={handleCanvasMouseDown}
         onMouseMove={handleCanvasMouseMove}
