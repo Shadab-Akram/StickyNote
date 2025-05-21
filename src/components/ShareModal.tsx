@@ -91,7 +91,7 @@ export function ShareModal({ isOpen, onClose, noteContent, notePosition, noteCol
             </Button>
           </div>
           <Button onClick={handleShare} className="w-full">
-            <Share2 className="mr-2 h-4 w-4" />
+            <Share2 className="mr-2 h-4 w-4"/>
             Share
           </Button>
         </div>

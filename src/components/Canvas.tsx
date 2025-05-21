@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Note } from "@/lib/schema";
 import { Maximize, RefreshCw, Minimize, Map, AlertTriangle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Error Fallback component
 function ErrorFallback({ error, resetCanvas }: { error: Error, resetCanvas: () => void }) {
@@ -478,15 +479,22 @@ export function Canvas({
       />
 
       {/* Add Mini Map toggle button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setIsMiniMapVisible(!isMiniMapVisible)}
-        className="absolute bottom-4 left-4 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg z-50"
-        title="Toggle Mini Map"
-      >
-        <Map className="h-5 w-5 text-gray-700 dark:text-gray-300" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsMiniMapVisible(!isMiniMapVisible)}
+            className="absolute bottom-4 left-4 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg z-50 h-12 w-12"
+          >
+            <Map className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right" align="center">
+          <p>{isMiniMapVisible ? 'Hide Mini Map' : 'Show Mini Map'}</p>
+          <p className="text-xs text-muted-foreground">Quick overview and navigation</p>
+        </TooltipContent>
+      </Tooltip>
       
       {/* Show Mini Map when visible */}
       {isMiniMapVisible && (

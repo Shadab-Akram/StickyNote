@@ -513,15 +513,6 @@ export function StickyNote({
     }
   };
 
-  useEffect(() => {
-    // Check if first visit and show tutorial
-    const hasVisited = localStorage.getItem('hasVisitedBefore');
-    if (!hasVisited) {
-      setIsTutorialOpen(true);
-      localStorage.setItem('hasVisitedBefore', 'true');
-    }
-  }, []);
-
   // Add a style tag for text styling
   useEffect(() => {
     // Add a style tag for dark mode specific styles

@@ -169,6 +169,7 @@ export function FloatingNavbar({
                   size="icon"
                   onClick={(e) => { e.stopPropagation(); onAddNote(); }}
                   className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                  data-add-note
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -187,6 +188,7 @@ export function FloatingNavbar({
                   size="icon"
                   onClick={(e) => { e.stopPropagation(); onToggleDragMode(); }}
                   className={`h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 ${isDragMode ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+                  data-hand-tool
                 >
                   <Hand className="h-4 w-4" />
                 </Button>
@@ -215,15 +217,15 @@ export function FloatingNavbar({
                 style={{ 
                   position: 'absolute',
                   transitionDelay: `${isMobileMenuOpen ? index * 40 : (menuItems.length - index - 1) * 30}ms`,
-                  bottom: isMobileMenuOpen ? `${(index + 1) * 52}px` : '0px',
+                  bottom: isMobileMenuOpen ? `${(index + 1) * 54}px` : '0px',
                   opacity: isMobileMenuOpen ? 1 : 0,
                   transform: isMobileMenuOpen ? 'scale(1)' : 'scale(0.5)',
                   pointerEvents: isMobileMenuOpen ? 'auto' : 'none',
-                  right: '1px',
+                  right: '4px',
                   touchAction: 'none',
                   willChange: 'transform, opacity'
                 }}
-                className="transition-all duration-300 ease-out"
+                className="transition-all duration-300 ease-out mb-2"
                 onClick={(e) => e.stopPropagation()}
                 onTouchEnd={(e) => e.stopPropagation()}
               >
@@ -279,6 +281,7 @@ export function FloatingNavbar({
               touchAction: 'none',
               willChange: 'transform'
             }}
+            data-menu-button
           >
             {isMobileMenuOpen ? (
               <X className="h-7 w-7" />
@@ -299,8 +302,9 @@ export function FloatingNavbar({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onAddNote}
+            onClick={(e) => { e.stopPropagation(); onAddNote(); }}
             className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            data-add-note
           >
             <Plus className="h-4 w-4" />
           </Button>
@@ -351,11 +355,12 @@ export function FloatingNavbar({
             size="icon"
             onClick={onToggleDragMode}
             className={`h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 ${isDragMode ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+            data-hand-tool
           >
             <Hand className="h-4 w-4" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Toggle Hand Tool</TooltipContent>
+        <TooltipContent>Hand</TooltipContent>
       </Tooltip>
 
       <Tooltip>
@@ -369,44 +374,46 @@ export function FloatingNavbar({
             <Grid className="h-4 w-4" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Toggle Grid</TooltipContent>
+        <TooltipContent>Grid</TooltipContent>
       </Tooltip>
 
       <div className="h-4 border-r border-gray-300 dark:border-gray-600 mx-1" />
 
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onZoomOut}
-            className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-            disabled={scale <= 0.25}
-          >
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Zoom Out</TooltipContent>
-      </Tooltip>
+      <div data-zoom-controls className="flex items-center gap-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onZoomOut}
+              className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+              disabled={scale <= 0.25}
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Zoom Out</TooltipContent>
+        </Tooltip>
 
-      <div className="text-xs font-medium px-1 min-w-[40px] text-center">
-        {Math.round(scale * 100)}%
+        <div className="text-xs font-medium px-1 min-w-[40px] text-center">
+          {Math.round(scale * 100)}%
+        </div>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onZoomIn}
+              className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+              disabled={scale >= 2}
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Zoom In</TooltipContent>
+        </Tooltip>
       </div>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onZoomIn}
-            className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-            disabled={scale >= 2}
-          >
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Zoom In</TooltipContent>
-      </Tooltip>
 
       <Tooltip>
         <TooltipTrigger asChild>
@@ -419,7 +426,7 @@ export function FloatingNavbar({
             <RotateCcw className="h-4 w-4" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Reset View</TooltipContent>
+        <TooltipContent>Reset</TooltipContent>
       </Tooltip>
       
       <div className="h-4 border-r border-gray-300 dark:border-gray-600 mx-1" />
@@ -470,20 +477,6 @@ export function FloatingNavbar({
       
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onOpenHelp}
-            className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <HelpCircle className="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Help Guide</TooltipContent>
-      </Tooltip>
-      
-      <Tooltip>
-        <TooltipTrigger asChild>
           <Button 
             variant="ghost" 
             size="icon" 
@@ -497,7 +490,7 @@ export function FloatingNavbar({
             )}
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Toggle Theme</TooltipContent>
+        <TooltipContent>Theme</TooltipContent>
       </Tooltip>
     </div>
   );

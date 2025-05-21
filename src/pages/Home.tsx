@@ -29,61 +29,20 @@ export default function Home() {
     clearAllNotes
   } = useNotes();
 
-  useEffect(() => {
-    // Check if first visit and show tutorial
-    const hasVisited = localStorage.getItem('hasVisitedBefore');
-    if (!hasVisited) {
-      setIsTutorialOpen(true);
-      localStorage.setItem('hasVisitedBefore', 'true');
-    }
-  }, []);
-
   const handleAddNote = () => {
-    // Set note dimensions based on default setting
-    let width = 220;
-    let height = 200;
-    
-    if (defaultNoteSize === 'small') {
-      width = 180;
-      height = 160;
-    } else if (defaultNoteSize === 'large') {
-      width = 280;
-      height = 260;
-    }
-    
-    // Determine color
-    let color;
-    if (defaultNoteColor === 'random') {
-      const colors = ['yellow', 'green', 'blue', 'purple', 'pink', 'orange'];
-      color = colors[Math.floor(Math.random() * colors.length)];
-    } else {
-      color = defaultNoteColor;
-    }
-    
-    // Get the current viewport dimensions and scroll position
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    
-    // Calculate the center position in canvas coordinates
-    // We need to account for the current canvas position and scale
-    const canvasRect = document.getElementById('canvas-content')?.getBoundingClientRect();
-    if (!canvasRect) return;
-
-    // Calculate the center of the viewport in canvas coordinates
-    const viewportCenterX = (viewportWidth / 2 - canvasRect.left) / scale;
-    const viewportCenterY = (viewportHeight / 2 - canvasRect.top) / scale;
-    
-    // Create note at the calculated center position
-    addNote({
+    const now = new Date().toISOString();
+    const newNote: Note = {
+      id: Date.now().toString(),
       title: "New Note",
       content: "",
-      position: { 
-        x: viewportCenterX - width / 2,
-        y: viewportCenterY - height / 2
-      },
-      size: { width, height },
-      color
-    });
+      position: { x: 0, y: 0 },
+      size: { width: 300, height: 200 },
+      color: defaultNoteColor === 'random' ? getRandomColor() : defaultNoteColor,
+      createdAt: now,
+      updatedAt: now,
+      zIndex: notes.length + 1
+    };
+    addNote(newNote);
   };
 
   const handleClearAll = () => {
@@ -91,9 +50,13 @@ export default function Home() {
   };
 
   const confirmClearAll = () => {
-    // Use clearAllNotes instead of deleting notes individually
     clearAllNotes();
     setIsConfirmOpen(false);
+  };
+
+  const getRandomColor = () => {
+    const colors = ['yellow', 'blue', 'green', 'pink', 'purple', 'orange'];
+    return colors[Math.floor(Math.random() * colors.length)];
   };
   
   const handleSaveSettings = (settings: {
