@@ -758,7 +758,7 @@ export function StickyNote({
         onClose={() => setIsDeleteConfirmOpen(false)}
         onConfirm={() => onDelete(note.id)}
         title="Delete Note"
-        description="Are you sure you want to delete this note? This action cannot be undone."
+        description="Are you sure you want to delete this note?"
         confirmText="Delete it"
         cancelText="Keep it"
         variant="destructive"
