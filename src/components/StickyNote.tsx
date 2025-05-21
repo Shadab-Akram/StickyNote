@@ -3,7 +3,9 @@ import { Note } from "@/lib/schema";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, GripHorizontal } from "lucide-react";
+import { Trash2, GripHorizontal, Share2 } from "lucide-react";
+import { ShareModal } from "@/components/ShareModal";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 interface StickyNoteProps {
   note: Note;
@@ -32,6 +34,8 @@ export function StickyNote({
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   
   // Update title state when note.title changes
   useEffect(() => {
@@ -448,7 +452,7 @@ export function StickyNote({
   // Handle delete note
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onDelete(note.id);
+    setIsDeleteConfirmOpen(true);
   };
   
   // Get appropriate colors based on the note color
@@ -543,6 +547,12 @@ export function StickyNote({
       document.head.removeChild(style);
     };
   }, []);
+
+  // Add this near other button handlers
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsShareModalOpen(true);
+  };
 
   return (
     <>
@@ -667,6 +677,14 @@ export function StickyNote({
             >
               <Trash2 className="h-4 w-4" />
             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 hover:bg-black/10"
+              onClick={handleShare}
+            >
+              <Share2 className="h-3 w-3" />
+            </Button>
           </div>
         </div>
         
@@ -726,6 +744,25 @@ export function StickyNote({
           </div>
         </div>
       </div>
+
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        noteContent={textareaRef.current?.value || note.content}
+        notePosition={note.position}
+        noteColor={note.color || 'red'}
+      />
+
+      <ConfirmDialog
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={() => onDelete(note.id)}
+        title="Delete Note"
+        description="Are you sure you want to delete this note? This action cannot be undone."
+        confirmText="Delete it"
+        cancelText="Keep it"
+        variant="destructive"
+      />
     </>
   );
 }

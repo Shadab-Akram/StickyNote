@@ -100,15 +100,28 @@ export function FloatingNavbar({
   }, [isMobileMenuOpen, handleClickOutside]);
 
   const handleMenuToggle = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault(); // Prevent default behavior
     e.stopPropagation();
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
+
+  // Prevent scroll when menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isMobileMenuOpen]);
 
   if (isMobile) {
     return (
       <>
         {/* Mobile floating navbar - minimal version */}
-        <div className="fixed top-4 left-0 right-0 flex justify-center" style={{ zIndex: 9997 }}>
+        <div className="fixed top-4 left-0 right-0 flex justify-center" style={{ zIndex: 40 }}>
           <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-full shadow-lg py-2 px-3 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
             {onUndo && (
               <Tooltip>
@@ -147,7 +160,7 @@ export function FloatingNavbar({
         </div>
 
         {/* Mobile bottom toolbar */}
-        <div className="fixed bottom-4 left-0 right-0 flex justify-center" style={{ zIndex: 9998 }}>
+        <div className="fixed bottom-4 left-0 right-0 flex justify-center" style={{ zIndex: 41 }}>
           <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-full shadow-lg py-2 px-3 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -184,9 +197,18 @@ export function FloatingNavbar({
         </div>
 
         {/* Mobile menu toggle button with vertical menu items */}
-        <div className="fixed bottom-4 right-4 mobile-menu-toggle" style={{ zIndex: 9999 }}>
+        <div 
+          className="fixed bottom-4 right-4 mobile-menu-toggle" 
+          style={{ zIndex: 50 }}
+          onClick={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
+        >
           {/* Vertical staggered menu items */}
-          <div className="mobile-menu">
+          <div 
+            className="mobile-menu"
+            onClick={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+          >
             {menuItems.map((item, index) => (
               <div 
                 key={index}
@@ -198,17 +220,34 @@ export function FloatingNavbar({
                   transform: isMobileMenuOpen ? 'scale(1)' : 'scale(0.5)',
                   pointerEvents: isMobileMenuOpen ? 'auto' : 'none',
                   right: '1px',
-                  touchAction: 'manipulation'
+                  touchAction: 'none',
+                  willChange: 'transform, opacity'
                 }}
                 className="transition-all duration-300 ease-out"
+                onClick={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
               >
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="default"
                       size="icon"
-                      onClick={(e) => { e.stopPropagation(); item.onClick(); }}
-                      className={`h-10 w-10 rounded-full shadow-md ${item.active ? 'bg-primary' : 'bg-slate-700/90 dark:bg-slate-700/90 text-white'} hover:bg-primary/90 dark:hover:bg-primary/90`}
+                      onClick={(e) => { 
+                        e.preventDefault();
+                        e.stopPropagation(); 
+                        item.onClick(); 
+                        setIsMobileMenuOpen(false);
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        item.onClick();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`h-12 w-12 rounded-full shadow-md ${
+                        item.active ? 'bg-primary' : 'bg-slate-700/90 dark:bg-slate-700/90 text-white'
+                      } hover:bg-primary/90 dark:hover:bg-primary/90`}
+                      style={{ touchAction: 'none' }}
                     >
                       {item.icon}
                     </Button>
@@ -226,11 +265,26 @@ export function FloatingNavbar({
             variant="default"
             size="icon"
             onClick={handleMenuToggle}
-            onTouchEnd={handleMenuToggle}
-            className="h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 relative"
-            style={{ touchAction: 'manipulation' }}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleMenuToggle(e);
+            }}
+            className="h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 relative"
+            style={{ 
+              touchAction: 'none',
+              willChange: 'transform'
+            }}
           >
-            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {isMobileMenuOpen ? (
+              <X className="h-7 w-7" />
+            ) : (
+              <Menu className="h-7 w-7" />
+            )}
           </Button>
         </div>
       </>

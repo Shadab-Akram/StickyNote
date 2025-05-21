@@ -144,7 +144,7 @@ export default function Home() {
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={confirmClearAll}
         title="Confirm Action"
-        message="Are you sure you want to clear all notes? This action cannot be undone."
+        description="Are you sure you want to clear all notes? This action cannot be undone."
       />
       
       <TutorialDialog
