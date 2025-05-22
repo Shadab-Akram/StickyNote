@@ -550,7 +550,7 @@ export function Nuxpad({
       <div 
         ref={noteRef}
         className={cn(
-          "Nuxpad group absolute rounded-md text-gray-800 shadow-lg border flex flex-col",
+          "Nuxpad group absolute rounded-md text-gray-800 shadow-lg border flex flex-col transition-all duration-200 group-hover:scale-105 group-hover:shadow-2xl group-focus-within:scale-105 group-focus-within:shadow-2xl",
           getColorClasses(),
           getBorderColor()
         )}
@@ -603,7 +603,7 @@ export function Nuxpad({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0 transition-all duration-300">
             <div className="relative">
               <Button
                 variant="ghost"
@@ -717,7 +717,7 @@ export function Nuxpad({
         </div>
         
         <div className={cn(
-          "note-footer flex justify-between items-center p-2 px-3 border-t mt-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity",
+          "note-footer flex justify-between items-center p-2 px-3 border-t mt-auto opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0 transition-all duration-300",
           getBorderColor()
         )}>
           <span className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate max-w-[70%] overflow-hidden">

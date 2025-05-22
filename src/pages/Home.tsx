@@ -29,6 +29,18 @@ export default function Home() {
     clearAllNotes
   } = useNotes();
 
+  const getNoteSize = () => {
+    switch (defaultNoteSize) {
+      case 'small':
+        return { width: 180, height: 160 };
+      case 'large':
+        return { width: 280, height: 260 };
+      case 'medium':
+      default:
+        return { width: 220, height: 200 };
+    }
+  };
+
   const handleAddNote = () => {
     const now = new Date().toISOString();
     const newNote: Note = {
@@ -36,7 +48,7 @@ export default function Home() {
       title: "New Note",
       content: "",
       position: { x: 0, y: 0 },
-      size: { width: 300, height: 200 },
+      size: getNoteSize(),
       color: defaultNoteColor === 'random' ? getRandomColor() : defaultNoteColor,
       createdAt: now,
       updatedAt: now,

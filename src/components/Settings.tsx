@@ -107,7 +107,7 @@ export function Settings({
                 <SelectTrigger id="gridSizeSelect">
                   <SelectValue placeholder="Select grid size" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[9999]">
                   <SelectItem value="20">Small (20px)</SelectItem>
                   <SelectItem value="40">Medium (40px)</SelectItem>
                   <SelectItem value="80">Large (80px)</SelectItem>
@@ -130,7 +130,7 @@ export function Settings({
                 <SelectTrigger id="defaultColorSelect">
                   <SelectValue placeholder="Select default color" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[9999]">
                   <SelectItem value="random">Random Color</SelectItem>
                   <SelectItem value="yellow">Yellow</SelectItem>
                   <SelectItem value="green">Green</SelectItem>
@@ -153,7 +153,7 @@ export function Settings({
                 <SelectTrigger id="defaultSizeSelect">
                   <SelectValue placeholder="Select default size" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[9999]">
                   <SelectItem value="small">Small (180x160px)</SelectItem>
                   <SelectItem value="medium">Medium (220x200px)</SelectItem>
                   <SelectItem value="large">Large (280x260px)</SelectItem>
