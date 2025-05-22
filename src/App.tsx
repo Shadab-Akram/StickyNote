@@ -8,7 +8,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { useEffect, useState, useCallback } from 'react';
-import { StickyNote } from '@/components/StickyNote';
+import { Nuxpad } from '@/components/Nuxpad';
 import { FloatingNavbar } from '@/components/FloatingNavbar';
 import { Note } from '@/lib/schema';
 import { toast } from 'sonner';
@@ -120,7 +120,7 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" storageKey="sticky-notes-theme">
+      <ThemeProvider defaultTheme="light" storageKey="Nuxpads-theme">
         <TooltipProvider>
           {/* Loading Screen */}
           {isLoading && (

@@ -26,7 +26,7 @@ const createSteps = (isMobile: boolean): Step[] => {
     return [
       {
         id: 'welcome',
-        title: 'Welcome to Sticky Canvas!',
+        title: 'Welcome to Nuxpad!',
         description: "Let's show you how to use the app on your mobile device.",
         icon: null,
         position: 'bottom',
@@ -76,7 +76,7 @@ const createSteps = (isMobile: boolean): Step[] => {
   return [
     {
       id: 'welcome',
-      title: 'Welcome to Sticky Canvas!',
+      title: 'Welcome to Nuxpad!',
       description: "Let's quickly show you around the workspace.",
       icon: null,
       position: 'center',

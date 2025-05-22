@@ -21,7 +21,7 @@ export function TutorialDialog({ isOpen, onClose }: TutorialDialogProps) {
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[600px] max-w-[95vw] max-h-[85vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="mb-2">
-          <DialogTitle className="text-lg sm:text-xl">Sticky Canvas Board Guide</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Nuxpad Guide</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
             A comprehensive guide to help you use all features of the app
           </DialogDescription>

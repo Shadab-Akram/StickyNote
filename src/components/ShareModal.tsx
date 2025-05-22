@@ -46,7 +46,7 @@ export function ShareModal({ isOpen, onClose, noteContent, notePosition, noteCol
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Shared Sticky Note',
+          title: 'Shared Nuxpad',
           text: noteContent,
           url: url,
         });

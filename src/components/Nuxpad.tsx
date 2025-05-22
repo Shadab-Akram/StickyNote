@@ -7,7 +7,7 @@ import { Trash2, GripHorizontal, Share2 } from "lucide-react";
 import { ShareModal } from "@/components/ShareModal";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 
-interface StickyNoteProps {
+interface NuxpadProps {
   note: Note;
   onUpdate: (id: string, updates: Partial<Note>) => void;
   onDelete: (id: string) => void;
@@ -16,14 +16,14 @@ interface StickyNoteProps {
   gridSize: number;
 }
 
-export function StickyNote({ 
+export function Nuxpad({ 
   note, 
   onUpdate, 
   onDelete, 
   onBringToFront,
   isGridVisible,
   gridSize
-}: StickyNoteProps) {
+}: NuxpadProps) {
   const noteRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
@@ -518,17 +518,17 @@ export function StickyNote({
     // Add a style tag for dark mode specific styles
     const style = document.createElement('style');
     style.textContent = `
-      .dark .sticky-note-textarea {
+      .dark .Nuxpad-textarea {
         color: rgba(255, 255, 255, 0.9) !important;
       }
-      .sticky-note-textarea {
+      .Nuxpad-textarea {
         background-color: transparent;
         font-family: system-ui, -apple-system, sans-serif;
       }
-      .dark .sticky-note-textarea::placeholder {
+      .dark .Nuxpad-textarea::placeholder {
         color: rgba(255, 255, 255, 0.4) !important;
       }
-      .sticky-note-textarea::placeholder {
+      .Nuxpad-textarea::placeholder {
         color: rgba(0, 0, 0, 0.4);
       }
     `;
@@ -550,7 +550,7 @@ export function StickyNote({
       <div 
         ref={noteRef}
         className={cn(
-          "sticky-note absolute rounded-md text-gray-800 shadow-lg border flex flex-col",
+          "Nuxpad group absolute rounded-md text-gray-800 shadow-lg border flex flex-col",
           getColorClasses(),
           getBorderColor()
         )}
@@ -603,7 +603,7 @@ export function StickyNote({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
             <div className="relative">
               <Button
                 variant="ghost"
@@ -685,7 +685,7 @@ export function StickyNote({
             spellCheck="false"
             value={note.content || ''}
             placeholder="Write your note here..."
-            className="bg-transparent outline-none w-full h-full min-h-[80px] focus:outline-none focus-visible:ring-0 resize-none font-sans text-base sticky-note-textarea"
+            className="bg-transparent outline-none w-full h-full min-h-[80px] focus:outline-none focus-visible:ring-0 resize-none font-sans text-base Nuxpad-textarea"
             style={{
               direction: 'ltr',
               unicodeBidi: 'normal',
@@ -717,14 +717,14 @@ export function StickyNote({
         </div>
         
         <div className={cn(
-          "note-footer flex justify-between items-center p-2 px-3 border-t mt-auto",
+          "note-footer flex justify-between items-center p-2 px-3 border-t mt-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity",
           getBorderColor()
         )}>
           <span className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate max-w-[70%] overflow-hidden">
             {formattedDate} · {formattedTime}
           </span>
           <div 
-            className="resize-handle cursor-nwse-resize p-2 -m-2 flex items-center justify-center"
+            className="resize-handle cursor-nwse-resize p-2 -m-2 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
             onMouseDown={handleResizeStart}
             onTouchStart={handleResizeTouchStart}
             title="Resize"

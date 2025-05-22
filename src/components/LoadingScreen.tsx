@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { StickyNote as StickyIcon } from 'lucide-react';
+import { StickyNote as NuxpadIcon } from 'lucide-react';
 
 interface LoadingScreenProps {
   onLoadingComplete?: () => void;
@@ -128,7 +128,7 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
                       ease: "easeInOut"
                     }}
                   >
-                    <StickyIcon className="w-12 h-12 text-sky-500" />
+                    <NuxpadIcon className="w-12 h-12 text-sky-500" />
                   </motion.div>
                 </motion.div>
 

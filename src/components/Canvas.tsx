@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { StickyNote } from "./StickyNote";
+import { Nuxpad } from "./Nuxpad";
 import { MiniMap } from "./MiniMap";
 import { FloatingNavbar } from "./FloatingNavbar";
 import { cn } from "@/lib/utils";
@@ -443,7 +443,7 @@ export function Canvas({
         >
           {/* Render all notes */}
           {notes.map(note => (
-            <StickyNote
+            <Nuxpad
               key={note.id}
               note={note}
               onUpdate={onUpdateNote}

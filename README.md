@@ -1,11 +1,11 @@
-# Sticky Note
+# Nuxpad
 
-An infinite canvas sticky notes application that lets you organize your thoughts, ideas, and tasks visually. The app features a responsive design that works on desktop, tablet, and mobile devices.
+Nuxpad is an infinite canvas application that lets you organize your thoughts, ideas, and tasks visually. The app features a responsive design that works on desktop, tablet, and mobile devices.
 
 
 ## Features
 
-- 📝 Create, edit, and delete sticky notes
+- 📝 Create, edit, and delete notes in Nuxpad
 - 🌈 Customize note colors
 - 📱 Fully responsive design (desktop, tablet, mobile)
 - 🔄 Infinite canvas with pan and zoom
@@ -17,7 +17,7 @@ An infinite canvas sticky notes application that lets you organize your thoughts
 
 ## Mobile View
 
-Sticky Canvas Board is optimized for mobile devices with touch controls for panning, zooming, and note manipulation.
+Nuxpad is optimized for mobile devices with touch controls for panning, zooming, and note manipulation.
 
 
 ## Tablet View
@@ -37,8 +37,8 @@ The application adapts seamlessly to tablet devices, providing an optimal experi
 
 1. Clone the repository
    ```
-   git clone https://github.com/yourusername/sticky-canvas-board.git
-   cd sticky-canvas-board
+   git clone https://github.com/yourusername/Nuxpad.git
+   cd Nuxpad
    ```
 
 2. Install dependencies
@@ -61,7 +61,7 @@ The application adapts seamlessly to tablet devices, providing an optimal experi
 
 ### Creating Notes
 
-Click the "Add Note" button in the toolbar to create a new sticky note. Notes are automatically saved to your browser's local storage.
+Click the "Add Note" button in the toolbar to create a new note in Nuxpad. Notes are automatically saved to your browser's local storage.
 
 ### Moving Notes
 
