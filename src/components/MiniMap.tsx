@@ -27,15 +27,17 @@ export function MiniMap({
   // Canvas dimensions
   const width = 150;
   const height = 150;
+  const canvasVirtualWidth = 3000;
+  const canvasVirtualHeight = 3000;
   
-  // Map canvas coordinate space to mini map space
-  const mapX = (x: number) => ((x - 5000) / 10000 * width) + (width / 2);
-  const mapY = (y: number) => ((y - 5000) / 10000 * height) + (height / 2);
+  // Map canvas coordinate space to mini map space (centered at 0,0)
+  const mapX = (x: number) => ((x + canvasVirtualWidth / 2) / canvasVirtualWidth) * width;
+  const mapY = (y: number) => ((y + canvasVirtualHeight / 2) / canvasVirtualHeight) * height;
   
-  // Convert mini map coordinates to canvas coordinates
+  // Convert mini map coordinates to canvas coordinates (centered at 0,0)
   const miniMapToCanvas = (x: number, y: number) => {
-    const canvasX = ((x - (width / 2)) / width * 10000) + 5000;
-    const canvasY = ((y - (height / 2)) / height * 10000) + 5000;
+    const canvasX = (x / width) * canvasVirtualWidth - canvasVirtualWidth / 2;
+    const canvasY = (y / height) * canvasVirtualHeight - canvasVirtualHeight / 2;
     return { x: canvasX, y: canvasY };
   };
   
@@ -53,12 +55,6 @@ export function MiniMap({
     // Set canvas background
     context.fillStyle = 'rgba(30, 41, 59, 0.7)';
     context.fillRect(0, 0, width, height);
-    
-    // Draw center point
-    context.fillStyle = 'rgba(255, 255, 255, 0.3)';
-    context.beginPath();
-    context.arc(width / 2, height / 2, 2, 0, Math.PI * 2);
-    context.fill();
     
     // Draw grid
     context.strokeStyle = 'rgba(255, 255, 255, 0.1)';
@@ -106,22 +102,19 @@ export function MiniMap({
     });
     
     // Calculate viewport indicator
-    const viewportWidth = Math.min(width / (10000 / (window.innerWidth / canvasScale)), width);
-    const viewportHeight = Math.min(height / (10000 / (window.innerHeight / canvasScale)), height);
-    
-    // Calculate viewport position on mini map
-    const viewX = width / 2 - (canvasPosition.x / 10 * canvasScale);
-    const viewY = height / 2 - (canvasPosition.y / 10 * canvasScale);
-    
+    const viewportWidth = (window.innerWidth / canvasVirtualWidth) * width / canvasScale;
+    const viewportHeight = (window.innerHeight / canvasVirtualHeight) * height / canvasScale;
+    // Calculate viewport position on mini map (centered logic)
+    const viewX = mapX(-canvasPosition.x);
+    const viewY = mapY(-canvasPosition.y);
     // Store viewport rectangle for dragging
     setViewportRect({
-      x: viewX - viewportWidth / 2,
-      y: viewY - viewportHeight / 2,
+      x: viewX,
+      y: viewY,
       width: viewportWidth,
       height: viewportHeight
     });
-    
-    // Draw viewport rectangle with different style if being dragged
+    // Draw viewport rectangle
     if (isDraggingViewport) {
       context.strokeStyle = 'rgba(59, 130, 246, 0.9)'; // blue-500
       context.lineWidth = 2;
@@ -129,25 +122,11 @@ export function MiniMap({
       context.strokeStyle = 'rgba(255, 255, 255, 0.8)';
       context.lineWidth = 1;
     }
-    
-    context.strokeRect(
-      viewX - viewportWidth / 2,
-      viewY - viewportHeight / 2,
-      viewportWidth,
-      viewportHeight
-    );
-    
-    // Fill viewport with a semi-transparent color to make it draggable
+    context.strokeRect(viewX, viewY, viewportWidth, viewportHeight);
     context.fillStyle = isDraggingViewport 
       ? 'rgba(59, 130, 246, 0.2)'  // blue tint when dragging
       : 'rgba(255, 255, 255, 0.1)'; // normal state
-      
-    context.fillRect(
-      viewX - viewportWidth / 2,
-      viewY - viewportHeight / 2,
-      viewportWidth,
-      viewportHeight
-    );
+    context.fillRect(viewX, viewY, viewportWidth, viewportHeight);
     
   }, [notes, canvasPosition, canvasScale, isDraggingViewport]);
   
