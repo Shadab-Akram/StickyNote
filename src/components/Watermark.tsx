@@ -9,7 +9,7 @@ export function Watermark({ text = "DOCS", className }: WatermarkProps) {
   return (
     <div 
       className={cn(
-        "fixed inset-0 pointer-events-none select-none z-[1] flex items-center justify-center",
+        "fixed inset-0 pointer-events-none select-none z-[5] flex items-center justify-center",
         "opacity-[0.15] dark:opacity-[0.2]",
         className
       )}
