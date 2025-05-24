@@ -14,6 +14,7 @@ interface NuxpadProps {
   onBringToFront: (id: string) => void;
   isGridVisible: boolean;
   gridSize: number;
+  viewportBounds: { left: number; top: number; right: number; bottom: number };
 }
 
 export function Nuxpad({ 
@@ -22,7 +23,8 @@ export function Nuxpad({
   onDelete, 
   onBringToFront,
   isGridVisible,
-  gridSize
+  gridSize,
+  viewportBounds
 }: NuxpadProps) {
   const noteRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -112,12 +114,18 @@ export function Nuxpad({
       const snappedX = isGridVisible ? Math.round(canvasContentX / gridSize) * gridSize : canvasContentX;
       const snappedY = isGridVisible ? Math.round(canvasContentY / gridSize) * gridSize : canvasContentY;
       
-      // Ensure position is never negative
-      const finalX = Math.max(0, snappedX);
-      const finalY = Math.max(0, snappedY);
+      // Clamp position within viewport bounds
+      const noteWidth = noteRef.current.offsetWidth;
+      const noteHeight = noteRef.current.offsetHeight;
+      const minX = viewportBounds.left;
+      const minY = viewportBounds.top;
+      const maxX = viewportBounds.right - noteWidth;
+      const maxY = viewportBounds.bottom - noteHeight;
+      const clampedX = Math.min(Math.max(snappedX, minX), maxX);
+      const clampedY = Math.min(Math.max(snappedY, minY), maxY);
       
       // Update element position visually for smooth dragging
-      noteRef.current.style.transform = `translate(${finalX}px, ${finalY}px)`;
+      noteRef.current.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
       noteRef.current.style.transition = 'none'; // Disable transition while dragging
     };
     
@@ -159,7 +167,7 @@ export function Nuxpad({
       document.removeEventListener('mousemove', handleDocumentMouseMove);
       document.removeEventListener('mouseup', handleDocumentMouseUp);
     };
-  }, [isDragging, dragOffset, isGridVisible, gridSize, note.id, note.position, onUpdate]);
+  }, [isDragging, dragOffset, isGridVisible, gridSize, note.id, note.position, onUpdate, viewportBounds]);
 
   // Handle mouse down for dragging
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -294,13 +302,19 @@ export function Nuxpad({
     const snappedX = isGridVisible ? Math.round(canvasContentX / gridSize) * gridSize : canvasContentX;
     const snappedY = isGridVisible ? Math.round(canvasContentY / gridSize) * gridSize : canvasContentY;
     
-    // Ensure position is never negative
-    const finalX = Math.max(0, snappedX);
-    const finalY = Math.max(0, snappedY);
+    // Clamp position within viewport bounds (touch)
+    const noteWidth = noteRef.current ? noteRef.current.offsetWidth : 0;
+    const noteHeight = noteRef.current ? noteRef.current.offsetHeight : 0;
+    const minX = viewportBounds.left;
+    const minY = viewportBounds.top;
+    const maxX = viewportBounds.right - noteWidth;
+    const maxY = viewportBounds.bottom - noteHeight;
+    const clampedX = Math.min(Math.max(snappedX, minX), maxX);
+    const clampedY = Math.min(Math.max(snappedY, minY), maxY);
     
     if (noteRef.current) {
       // Update element position visually for smooth dragging
-      noteRef.current.style.transform = `translate(${finalX}px, ${finalY}px)`;
+      noteRef.current.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
       noteRef.current.style.transition = 'none'; // Disable transition while dragging
     }
     

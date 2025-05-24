@@ -19,6 +19,7 @@ import { TutorialDialog } from './components/TutorialDialog';
 import { Button } from './components/ui/button';
 import { HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Watermark } from '@/components/Watermark';
 
 interface SharedNoteData {
   content: string;
@@ -130,11 +131,14 @@ export default function App() {
           {/* Main App Content */}
           <div 
             className={cn(
-              "h-screen w-full overflow-hidden flex flex-col bg-background text-foreground",
+              "h-screen w-full overflow-hidden flex flex-col bg-background text-foreground relative",
               "transition-opacity duration-300",
               isAppReady ? "opacity-100" : "opacity-0"
             )}
           >
+            {/* Watermark - Moved before other content */}
+            {isAppReady && <Watermark text="NUXPAD" />}
+
             {/* Help Button - Show only on desktop and when not in onboarding */}
             {!isMobile && !showOnboarding && isAppReady && (
               <Tooltip>

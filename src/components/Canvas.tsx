@@ -79,6 +79,21 @@ export function Canvas({
   
   const [isFullscreen, setIsFullscreen] = useState(false);
   
+  // Calculate viewport boundaries in canvas coordinates
+  const [viewportBounds, setViewportBounds] = useState({ left: 0, top: 0, right: 0, bottom: 0 });
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    const viewportWidth = canvasRef.current.clientWidth;
+    const viewportHeight = canvasRef.current.clientHeight;
+    // The top-left of the viewport in canvas coordinates
+    const left = (-position.x) / scale;
+    const top = (-position.y) / scale;
+    // The bottom-right of the viewport in canvas coordinates
+    const right = left + viewportWidth / scale;
+    const bottom = top + viewportHeight / scale;
+    setViewportBounds({ left, top, right, bottom });
+  }, [position, scale]);
+  
   // Bring note to front when clicked
   const handleBringToFront = (id: string) => {
     // Find the highest z-index
@@ -451,6 +466,7 @@ export function Canvas({
               onBringToFront={handleBringToFront}
               gridSize={gridSize}
               isGridVisible={isGridVisible}
+              viewportBounds={viewportBounds}
             />
           ))}
         </div>
