@@ -172,3 +172,16 @@ html, body, #root {
     transform: translateY(0);
   }
 }
+
+@keyframes blink {
+  0%, 100% {
+    border-color: transparent;
+  }
+  50% {
+    border-color: currentColor;
+  }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
