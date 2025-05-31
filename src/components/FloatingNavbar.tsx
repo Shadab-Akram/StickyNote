@@ -247,7 +247,9 @@ export function FloatingNavbar({
                         setIsMobileMenuOpen(false);
                       }}
                       className={`h-12 w-12 rounded-full shadow-md ${
-                        item.active ? 'bg-primary' : 'bg-slate-700/90 dark:bg-slate-700/90 text-white'
+                        item.active
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-white text-gray-800 dark:bg-slate-700/90 dark:text-white'
                       } hover:bg-primary/90 dark:hover:bg-primary/90`}
                       style={{ touchAction: 'none' }}
                     >
